@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>顏色記憶挑戰</title>
+<style>
+:root{
+  --bg:#ebecee; --panel:#f8f8f9; --ink:#1f2227; --muted:#656b75; --line:#cfd2d7; --btn:#2b3038; --btnink:#f5f5f6; --warn:#d6382f;
+  box-sizing:border-box;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#25272b; --panel:#2f3237; --ink:#eceef0; --muted:#a2a8b1; --line:#454950; --btn:#e4e6e9; --btnink:#202226; --warn:#ff6a5f;}
+}
+*,*::before,*::after{box-sizing:inherit}
+html,body{margin:0;min-height:100%}
+body{background:var(--bg);color:var(--ink);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;line-height:1.6;display:flex;justify-content:center}
+main{width:100%;max-width:560px;padding:20px 18px 40px}
+section[hidden]{display:none}
+h1{font-size:2rem;margin:.6em 0 .3em;letter-spacing:.02em}
+h2{font-size:1.25rem;margin:0}
+p{margin:.4em 0}
+.muted{color:var(--muted)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px}
+ul.rules{padding-left:1.2em;margin:.8em 0 1.4em}
+ul.rules li{margin:.3em 0}
+button{font:inherit;font-weight:600;border:0;border-radius:8px;padding:12px 22px;background:var(--btn);color:var(--btnink);cursor:pointer;min-height:48px}
+button:focus-visible,input:focus-visible{outline:3px solid #4a8cff;outline-offset:2px}
+.full{width:100%}
+.topbar{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;color:var(--muted);font-size:.95rem}
+.ask{font-size:1.35rem;font-weight:700;margin:.2em 0 .6em}
+.stage{width:100%;aspect-ratio:1/1;background:var(--panel);border:1px solid var(--line);border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.stage img{width:100%;height:100%;object-fit:contain;display:block}
+.stage .ph{padding:24px;text-align:center;color:var(--muted)}
+.bar{height:10px;background:var(--line);border-radius:6px;overflow:hidden;margin:14px 0 6px}
+.bar>i{display:block;height:100%;width:100%;background:var(--ink);transform-origin:left;transition:width .12s linear}
+.bar.warn>i{background:var(--warn)}
+.count{font-size:2.4rem;font-weight:700;text-align:center;font-variant-numeric:tabular-nums}
+.count.warn{color:var(--warn)}
+.preview{height:150px;border-radius:10px;border:1px solid var(--line);background:#808080}
+.hex{text-align:center;font-weight:700;font-size:1.1rem;margin:8px 0 14px;font-variant-numeric:tabular-nums}
+.row{margin:12px 0}
+.row label{display:flex;justify-content:space-between;font-size:.95rem;margin-bottom:4px}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:30px;border-radius:15px;border:1px solid var(--line);margin:0;background:#888;touch-action:pan-y}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:30px;height:30px;border-radius:50%;background:#fff;border:3px solid #222;box-shadow:0 0 0 1px #fff}
+input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:#fff;border:3px solid #222}
+.score{font-size:3.6rem;font-weight:800;text-align:center;line-height:1.1;margin:.1em 0 0}
+.score small{font-size:1.2rem;font-weight:600;color:var(--muted)}
+.comment{text-align:center;font-weight:700;font-size:1.2rem;margin:.2em 0 1em}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.sw{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel);text-align:center}
+.sw div{height:120px}
+.sw p{margin:0;padding:8px 6px;font-size:.9rem}
+.sw b{display:block;font-variant-numeric:tabular-nums}
+table{width:100%;border-collapse:collapse;margin:0 0 18px}
+td{padding:9px 6px;border-bottom:1px solid var(--line)}
+td:last-child{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+.chip{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:-2px;margin-right:4px;border:1px solid var(--line)}
+footer{margin-top:32px;padding-top:14px;border-top:1px solid var(--line);font-size:.8rem;line-height:1.7;color:var(--muted)}
+footer p{margin:.3em 0}
+footer a{color:inherit;text-decoration:underline}
+@media (prefers-reduced-motion:reduce){.bar>i{transition:none}}
+</style>
+</head>
+<body>
+<main>
+
+<section id="s-start">
+  <h1>顏色記憶挑戰</h1>
+  <p class="muted">看 10 秒，憑記憶調出最接近的顏色。</p>
+  <div class="card">
+    <ul class="rules">
+      <li>一局 5 題，每題會先告訴你要記哪個部位。</li>
+      <li>觀察 10 秒，時間到圖片就會消失，不能回看。</li>
+      <li>用色相、飽和度、亮度三條滑桿調出你記得的顏色。</li>
+      <li>每題 100 分，總分是 5 題的平均。</li>
+    </ul>
+    <button id="b-start" class="full">開始遊戲</button>
+  </div>
+</section>
+
+<section id="s-look" hidden>
+  <div class="topbar"><span class="t-round"></span><span class="t-total"></span></div>
+  <p class="ask"></p>
+  <div class="stage"></div>
+  <div class="bar" role="progressbar" aria-label="剩餘觀察時間"><i></i></div>
+  <div class="count"></div>
+</section>
+
+<section id="s-pick" hidden>
+  <div class="topbar"><span class="t-round"></span><span class="t-total"></span></div>
+  <p class="ask"></p>
+  <div class="preview" id="preview"></div>
+  <div class="hex" id="hex">#808080</div>
+  <div class="row"><label for="rh"><span>色相</span><span id="vh"></span></label><input id="rh" type="range" min="0" max="360" value="0"></div>
+  <div class="row"><label for="rs"><span>飽和度</span><span id="vs"></span></label><input id="rs" type="range" min="0" max="100" value="0"></div>
+  <div class="row"><label for="rb"><span>亮度</span><span id="vb"></span></label><input id="rb" type="range" min="0" max="100" value="50"></div>
+  <button id="b-ok" class="full" style="margin-top:14px">確認</button>
+</section>
+
+<section id="s-result" hidden>
+  <div class="topbar"><span class="t-round"></span><span class="t-total"></span></div>
+  <p class="ask"></p>
+  <p class="score"></p>
+  <p class="comment"></p>
+  <div class="pair">
+    <div class="sw"><div id="r-mine"></div><p>你的顏色<b id="r-mine-hex"></b></p></div>
+    <div class="sw"><div id="r-ans"></div><p>正確顏色<b id="r-ans-hex"></b></p></div>
+  </div>
+  <button id="b-next" class="full"></button>
+</section>
+
+<section id="s-final" hidden>
+  <h1>遊戲結束</h1>
+  <p class="score"></p>
+  <p class="comment"></p>
+  <table id="f-table"></table>
+  <button id="b-again" class="full">再玩一次</button>
+</section>
+
+<footer>
+  <p>本遊戲為非營利的粉絲同人作品，僅供個人娛樂與交流，與任天堂、Creatures Inc.、GAME FREAK inc.、株式會社寶可夢（The Pokémon Company）無關，亦未獲得其授權、贊助或認可。</p>
+  <p>Pokémon、寶可夢及相關角色名稱、圖像之著作權與商標，均屬其各自權利人所有。遊戲中所使用之角色圖片，僅作為顏色記憶題目之示意，版權歸原權利人所有。</p>
+  <p>若權利人認為本作品有侵權疑慮，請來信 <a href="mailto:99138joyce@gmail.com">99138joyce@gmail.com</a>，將立即移除相關內容。</p>
+</footer>
+
+</main>
+<script>
+/* ===== 題庫：校準時只需修改這一段（圖片放在 assets/，色碼為參考值） ===== */
+const QUESTIONS = [
+  { image: "assets/No.0001.png", prompt: "妙蛙種子的皮膚（非斑點區域）", color: "#98cfb4" },
+  { image: "assets/No.0004.png", prompt: "小火龍的皮膚", color: "#f2b983" },
+  { image: "assets/No.0007.png", prompt: "傑尼龜的龜殼", color: "#c08975" },
+  { image: "assets/No.0010.png", prompt: "綠毛蟲的觸角", color: "#ef7c4a" },
+  { image: "assets/No.0025.png", prompt: "皮卡丘的臉頰", color: "#e06e50" },
+  { image: "assets/No.0041.png", prompt: "大嘴蝠的翅膀", color: "#ae6aa5" },
+  { image: "assets/No.0048.png", prompt: "毛球的眼睛", color: "#dc81a9" },
+  { image: "assets/No.0052.png", prompt: "喵喵頭上的金幣", color: "#ffe9bf" },
+  { image: "assets/No.0054.png", prompt: "可達鴨的嘴巴", color: "#fffbec" },
+  { image: "assets/No.0059.png", prompt: "風速狗的尾巴（奶油色部分）", color: "#eed3af" },
+  { image: "assets/No.0079.png", prompt: "呆呆獸的皮膚", color: "#e5acbb" },
+];
+/* ===== 可調參數 ===== */
+const ROUNDS = 5;            // 每局題數
+const MEMORIZE_SECONDS = 10; // 觀察秒數
+const WARN_SECONDS = 5;      // 最後幾秒變紅
+const SCORE_SCALE = 30;      // 計分：score = 100 * exp(-(dE/SCALE)^POWER)
+const SCORE_POWER = 1.5;
+
+const COMMENTS = [[90,"色彩大師！"],[75,"眼力不錯"],[60,"還算接近"],[40,"差一點點"],[0,"再接再厲"]];
+
+/* ===== 色彩運算 ===== */
+function hsb2rgb(h,s,b){
+  s/=100; b/=100;
+  const f=n=>{const k=(n+h/60)%6; return b*(1-s*Math.max(0,Math.min(k,4-k,1)));};
+  return [f(5),f(3),f(1)].map(v=>Math.round(v*255));
+}
+const toHex=rgb=>"#"+rgb.map(v=>v.toString(16).padStart(2,"0")).join("").toUpperCase();
+const fromHex=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+function rgb2lab(rgb){
+  const [r,g,b]=rgb.map(v=>{v/=255;return v<=0.04045?v/12.92:Math.pow((v+0.055)/1.055,2.4);});
+  const x=(0.4124564*r+0.3575761*g+0.1804375*b)/0.95047;
+  const y=(0.2126729*r+0.7151522*g+0.0721750*b);
+  const z=(0.0193339*r+0.1191920*g+0.9503041*b)/1.08883;
+  const f=t=>t>216/24389?Math.cbrt(t):(24389/27*t+16)/116;
+  const fx=f(x),fy=f(y),fz=f(z);
+  return [116*fy-16,500*(fx-fy),200*(fy-fz)];
+}
+function deltaE(hexA,hexB){
+  const a=rgb2lab(fromHex(hexA)), b=rgb2lab(fromHex(hexB));
+  return Math.hypot(a[0]-b[0],a[1]-b[1],a[2]-b[2]);
+}
+function scoreOf(hexA,hexB){
+  const s=100*Math.exp(-Math.pow(deltaE(hexA,hexB)/SCORE_SCALE,SCORE_POWER));
+  return Math.max(0,Math.min(100,Math.round(s)));
+}
+const commentOf=s=>COMMENTS.find(c=>s>=c[0])[1];
+
+/* ===== 介面 ===== */
+const $=id=>document.getElementById(id);
+const screens=["s-start","s-look","s-pick","s-result","s-final"];
+function show(id){screens.forEach(s=>$(s).hidden=(s!==id)); window.scrollTo(0,0);}
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+let game=null, timer=null;
+const total=()=>game.scores.reduce((a,b)=>a+b,0);
+function setTop(sec){
+  sec.querySelector(".t-round").textContent=`第 ${game.idx+1} / ${ROUNDS} 題`;
+  sec.querySelector(".t-total").textContent=`累計 ${total()} 分`;
+}
+
+function startGame(){
+  game={order:shuffle(QUESTIONS).slice(0,ROUNDS),idx:0,scores:[],picks:[]};
+  startLook();
+}
+
+function startLook(){
+  const q=game.order[game.idx], sec=$("s-look");
+  setTop(sec);
+  sec.querySelector(".ask").textContent="請記住：" + q.prompt;
+  const stage=sec.querySelector(".stage");
+  stage.innerHTML="";
+  const img=new Image();
+  img.alt=q.prompt;
+  img.onerror=()=>{stage.innerHTML="";const d=document.createElement("div");d.className="ph";d.textContent="找不到圖片 "+q.image+"，請確認檔案已放進 assets/ 資料夾。";stage.appendChild(d);};
+  img.src=q.image;
+  stage.appendChild(img);
+  show("s-look");
+  const bar=sec.querySelector(".bar"), fill=bar.querySelector("i"), count=sec.querySelector(".count");
+  const end=performance.now()+MEMORIZE_SECONDS*1000;
+  clearInterval(timer);
+  const tick=()=>{
+    const left=Math.max(0,end-performance.now());
+    const secs=Math.ceil(left/1000);
+    fill.style.width=(left/(MEMORIZE_SECONDS*1000)*100)+"%";
+    count.textContent=secs+" 秒";
+    const warn=left<=WARN_SECONDS*1000;
+    bar.classList.toggle("warn",warn); count.classList.toggle("warn",warn);
+    bar.setAttribute("aria-valuenow",secs);
+    if(left<=0){clearInterval(timer);startPick();}
+  };
+  tick(); timer=setInterval(tick,100);
+}
+
+const rh=$("rh"),rs=$("rs"),rb=$("rb");
+function currentHex(){return toHex(hsb2rgb(+rh.value,+rs.value,+rb.value));}
+function updatePicker(){
+  const h=+rh.value,s=+rs.value,b=+rb.value;
+  $("vh").textContent=h+"°"; $("vs").textContent=s+"%"; $("vb").textContent=b+"%";
+  const hex=currentHex();
+  $("preview").style.background=hex; $("hex").textContent=hex;
+  rh.style.background="linear-gradient(90deg,"+[0,60,120,180,240,300,360].map(x=>toHex(hsb2rgb(x,100,100))).join(",")+")";
+  rs.style.background=`linear-gradient(90deg,${toHex(hsb2rgb(h,0,b))},${toHex(hsb2rgb(h,100,b))})`;
+  rb.style.background=`linear-gradient(90deg,#000,${toHex(hsb2rgb(h,s,100))})`;
+}
+[rh,rs,rb].forEach(el=>el.addEventListener("input",updatePicker));
+
+function startPick(){
+  const q=game.order[game.idx], sec=$("s-pick");
+  setTop(sec);
+  sec.querySelector(".ask").textContent="調出你記得的顏色：" + q.prompt;
+  rh.value=0; rs.value=0; rb.value=50; // 起始為中性灰 #808080
+  updatePicker();
+  show("s-pick");
+}
+
+function confirmPick(){
+  const q=game.order[game.idx], mine=currentHex();
+  const s=scoreOf(mine,q.color);
+  game.scores.push(s); game.picks.push(mine);
+  const sec=$("s-result");
+  setTop(sec);
+  sec.querySelector(".ask").textContent=q.prompt;
+  sec.querySelector(".score").innerHTML=`${s}<small> / 100</small>`;
+  sec.querySelector(".comment").textContent=commentOf(s);
+  $("r-mine").style.background=mine; $("r-mine-hex").textContent=mine;
+  $("r-ans").style.background=q.color; $("r-ans-hex").textContent=q.color.toUpperCase();
+  $("b-next").textContent=game.idx+1<ROUNDS?"下一題":"查看總分";
+  show("s-result");
+}
+
+function nextStep(){
+  if(game.idx+1<ROUNDS){game.idx++;startLook();return;}
+  const avg=Math.round(total()/ROUNDS), sec=$("s-final");
+  sec.querySelector(".score").innerHTML=`${avg}<small> / 100</small>`;
+  sec.querySelector(".comment").textContent=commentOf(avg);
+  $("f-table").innerHTML=game.order.map((q,i)=>
+    `<tr><td><span class="chip" style="background:${game.picks[i]}"></span><span class="chip" style="background:${q.color}"></span>${q.prompt}</td><td>${game.scores[i]}</td></tr>`).join("");
+  show("s-final");
+}
+
+$("b-start").onclick=startGame;
+$("b-ok").onclick=confirmPick;
+$("b-next").onclick=nextStep;
+$("b-again").onclick=startGame;
+</script>
+</body>
+</html>
